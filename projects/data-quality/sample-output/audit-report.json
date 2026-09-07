@@ -1,0 +1,54 @@
+{
+  "scope": "Synthetic fixed-layout request audit; no workbook engine execution.",
+  "rows_reviewed": 8,
+  "diagnostic_count": 8,
+  "disposition": "hold_for_review",
+  "reported_detail_minutes": 127,
+  "computable_input_subtotal_minutes": 142,
+  "uncomputable_input_rows": [
+    5
+  ],
+  "accepted_unique_request_total_minutes": null,
+  "findings": [
+    {
+      "code": "DUPLICATE_ID",
+      "cell": "A4",
+      "detail": "R002 also appears at A3; reconcile before deduplication."
+    },
+    {
+      "code": "MISSING_VALUE",
+      "cell": "C5",
+      "detail": "Required field units is blank."
+    },
+    {
+      "code": "MISSING_INPUT_GUARD",
+      "cell": "E5",
+      "detail": "Captured multiplication has no explicit unavailable state for invalid or missing inputs."
+    },
+    {
+      "code": "FORMULA_REFERENCE",
+      "cell": "E6",
+      "detail": "Captured '=C6*D5'; expected fixed-layout pattern =C6*D6."
+    },
+    {
+      "code": "BAD_ROW_TOTAL",
+      "cell": "E6",
+      "detail": "Reported 10; same-row inputs imply 30 minutes."
+    },
+    {
+      "code": "BAD_ROW_TOTAL",
+      "cell": "E7",
+      "detail": "Reported 25; same-row inputs imply 20 minutes."
+    },
+    {
+      "code": "SUMMARY_RANGE",
+      "cell": "E10",
+      "detail": "Captured =SUM(E2:E8); full raw detail requires =SUM(E2:E9)."
+    },
+    {
+      "code": "BAD_SUMMARY_TOTAL",
+      "cell": "E10",
+      "detail": "Reported 115; full raw detail sums to 127 minutes."
+    }
+  ]
+}

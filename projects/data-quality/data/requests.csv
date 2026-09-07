@@ -1,0 +1,9 @@
+request_id,queue,units,minutes_per_unit,reported_minutes
+R001,standard,4,5,20
+R002,priority,3,10,30
+R002,priority,3,10,30
+R003,standard,,5,0
+R004,priority,2,15,10
+R005,standard,5,4,25
+R006,standard,0,8,0
+R007,priority,2,6,12

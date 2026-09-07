@@ -1,0 +1,19 @@
+{
+  "provenance": "Constructed synthetic worksheet snapshot; formulas are inert text, not executed.",
+  "sheet": "Requests",
+  "formulas": {
+    "E2": "=C2*D2",
+    "E3": "=C3*D3",
+    "E4": "=C4*D4",
+    "E5": "=C5*D5",
+    "E6": "=C6*D5",
+    "E7": "=C7*D7",
+    "E8": "=C8*D8",
+    "E9": "=C9*D9"
+  },
+  "summary": {
+    "cell": "E10",
+    "formula": "=SUM(E2:E8)",
+    "reported_minutes": 115
+  }
+}
