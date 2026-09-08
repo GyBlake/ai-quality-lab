@@ -100,3 +100,118 @@ def evaluate_records(records: list[dict[str, Any]], rubric: dict[str, Any]) -> d
         "failure_counts": dict(sorted(failure_counts.items())),
         "results": results,
     }
+
+
+def _index_records(records: list[dict[str, Any]], side: str) -> dict[Any, dict[str, Any]]:
+    indexed: dict[Any, dict[str, Any]] = {}
+    for record in records:
+        record_id = record.get("id")
+        if record_id is None:
+            raise ValueError(f"Every {side} comparison record must have an id.")
+        if record_id in indexed:
+            raise ValueError(f"Duplicate {side} comparison id: {record_id}")
+        indexed[record_id] = record
+    return indexed
+
+
+def compare_records(
+    left_records: list[dict[str, Any]],
+    right_records: list[dict[str, Any]],
+    rubric: dict[str, Any],
+    *,
+    left_name: str = "left",
+    right_name: str = "right",
+) -> dict[str, Any]:
+    """Compare two response sets by shared record id under one rubric.
+
+    A winner is based only on weighted rubric score. Per-criterion differences
+    are preserved so an equal total does not hide different strengths or
+    failures. Missing or duplicate ids are rejected rather than guessed.
+    """
+
+    left_index = _index_records(left_records, left_name)
+    right_index = _index_records(right_records, right_name)
+    left_ids = set(left_index)
+    right_ids = set(right_index)
+    if left_ids != right_ids:
+        missing_left = sorted(right_ids - left_ids, key=str)
+        missing_right = sorted(left_ids - right_ids, key=str)
+        raise ValueError(
+            "Comparison sets must contain the same ids; "
+            f"missing from {left_name}={missing_left}, missing from {right_name}={missing_right}."
+        )
+
+    wins = {left_name: 0, right_name: 0, "tie": 0}
+    criterion_wins: dict[str, dict[str, int]] = {}
+    pairs: list[dict[str, Any]] = []
+
+    for record_id in sorted(left_ids, key=str):
+        left_result = evaluate_response(left_index[record_id], rubric)
+        right_result = evaluate_response(right_index[record_id], rubric)
+
+        if left_result["score"] > right_result["score"]:
+            winner = left_name
+        elif right_result["score"] > left_result["score"]:
+            winner = right_name
+        else:
+            winner = "tie"
+        wins[winner] += 1
+
+        left_trace = {item["criterion_id"]: item for item in left_result["trace"]}
+        right_trace = {item["criterion_id"]: item for item in right_result["trace"]}
+        deltas = []
+        for criterion in rubric["criteria"]:
+            cid = criterion["id"]
+            left_item = left_trace[cid]
+            right_item = right_trace[cid]
+            if left_item["score"] > right_item["score"]:
+                criterion_winner = left_name
+            elif right_item["score"] > left_item["score"]:
+                criterion_winner = right_name
+            else:
+                criterion_winner = "tie"
+            counts = criterion_wins.setdefault(cid, {left_name: 0, right_name: 0, "tie": 0})
+            counts[criterion_winner] += 1
+            deltas.append(
+                {
+                    "criterion_id": cid,
+                    "winner": criterion_winner,
+                    left_name: {
+                        "passed": left_item["passed"],
+                        "score": left_item["score"],
+                        "evidence": left_item["evidence"],
+                    },
+                    right_name: {
+                        "passed": right_item["passed"],
+                        "score": right_item["score"],
+                        "evidence": right_item["evidence"],
+                    },
+                }
+            )
+
+        pairs.append(
+            {
+                "id": record_id,
+                "winner": winner,
+                "score_delta": round(left_result["score"] - right_result["score"], 6),
+                left_name: left_result,
+                right_name: right_result,
+                "criterion_deltas": deltas,
+            }
+        )
+
+    pair_count = len(pairs)
+    return {
+        "rubric": rubric.get("name", "unnamed"),
+        "left": left_name,
+        "right": right_name,
+        "pairs": pair_count,
+        "wins": wins,
+        "win_rates": {
+            left_name: round((wins[left_name] / pair_count * 100.0) if pair_count else 0.0, 2),
+            right_name: round((wins[right_name] / pair_count * 100.0) if pair_count else 0.0, 2),
+            "tie": round((wins["tie"] / pair_count * 100.0) if pair_count else 0.0, 2),
+        },
+        "criterion_wins": criterion_wins,
+        "results": pairs,
+    }
