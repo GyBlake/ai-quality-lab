@@ -1,0 +1,38 @@
+{
+  "name": "support-response-v1",
+  "pass_threshold": 75,
+  "criteria": [
+    {
+      "id": "acknowledges_issue",
+      "description": "Response acknowledges the customer's issue.",
+      "source": "Support policy: acknowledge the reported problem before resolution guidance.",
+      "rule": "contains_any",
+      "values": ["sorry", "understand", "I see", "thanks for letting us know"],
+      "weight": 2
+    },
+    {
+      "id": "provides_next_step",
+      "description": "Response gives a concrete next step.",
+      "source": "Support policy: every actionable case needs a next step.",
+      "rule": "contains_any",
+      "values": ["next step", "please", "try", "contact", "send"],
+      "weight": 3
+    },
+    {
+      "id": "no_unsupported_guarantee",
+      "description": "Response avoids unsupported timing guarantees.",
+      "source": "Support policy: do not invent turnaround commitments.",
+      "rule": "excludes_any",
+      "values": ["guaranteed within 24 hours", "definitely fixed today", "will be resolved immediately"],
+      "weight": 3
+    },
+    {
+      "id": "concise",
+      "description": "Response remains concise enough for frontline support.",
+      "source": "Style guide: keep standard support replies under 800 characters.",
+      "rule": "max_chars",
+      "value": 800,
+      "weight": 1
+    }
+  ]
+}
