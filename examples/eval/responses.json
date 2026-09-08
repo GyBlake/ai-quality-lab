@@ -1,0 +1,14 @@
+[
+  {
+    "id": "support-001",
+    "response": "I understand the frustration. Please send the order number and the email used at checkout so we can review the case and give you the next step."
+  },
+  {
+    "id": "support-002",
+    "response": "Sorry about that. This is guaranteed within 24 hours."
+  },
+  {
+    "id": "support-003",
+    "response": "Please contact support with the account email and a screenshot of the error."
+  }
+]
