@@ -1,56 +1,122 @@
 # ai-quality-lab
 
-Small, inspectable examples for evaluating AI responses and checking operational data. The lab combines source-grounded rubrics, prompt regression fixtures, and a dependency-free Python audit.
+Evidence-trace evaluation and data-quality utilities for AI systems.
 
-The focus is the review decision: what failed, which evidence supports that judgment, and what needs clarification before the result can be used.
+The project is built around one rule: **a quality judgment should be traceable from requirement → evidence → decision → disposition.** It combines a runnable deterministic response evaluator with source-grounded rubrics, prompt regression fixtures, and operational data audits.
 
-## Examples
+This is an early-stage toolkit. It does not pretend deterministic string rules are a replacement for expert review or model-based judging. Instead, it provides a reproducible baseline that can be inspected, tested, extended, and compared.
+
+## What works now
+
+### 1. Deterministic response evaluation
+
+Install locally and run the `aq` CLI against a JSON response set and rubric:
+
+```bash
+python -m pip install .
+aq examples/eval/responses.json --rubric examples/eval/rubric.json
+```
+
+Each criterion emits an evidence trace containing the rule, source statement, matched evidence, weighted score, and pass/fail decision. Batch output includes pass rate and clustered failure counts.
+
+Supported rules in v0.1:
+
+- `contains_any`
+- `contains_all`
+- `excludes_any`
+- `max_chars`
+- `min_chars`
+
+The engine is dependency-free and makes no network or model calls.
+
+### 2. Spreadsheet / operational data QA
+
+The existing synthetic Requests audit checks duplicate IDs, missing inputs, invalid numeric values, shifted formula references, row-total mismatches, and broken summary ranges.
+
+```bash
+python scripts/audit_data.py
+python scripts/audit_data.py --check
+```
+
+A successful `--check` means the intentionally broken fixture reproduces the expected diagnostics. It does **not** mean the data is clean.
+
+### 3. Prompt regression fixtures
+
+The prompt-testing project demonstrates explicit routing rules, ambiguity handling, structured output contracts, and regression cases including embedded instruction attacks.
+
+## Example output shape
+
+```json
+{
+  "rubric": "support-response-v1",
+  "records": 3,
+  "passed": 2,
+  "failed": 1,
+  "pass_rate": 66.67,
+  "failure_counts": {
+    "no_unsupported_guarantee": 1,
+    "provides_next_step": 1
+  }
+}
+```
+
+The full result also contains a per-response `trace` so a reviewer can inspect exactly why a criterion passed or failed.
+
+## Existing evaluation examples
 
 | Example | Start here | What it covers |
 | --- | --- | --- |
-| AI response evaluation | [Completed comparison](projects/ai-evaluation/cases/01-policy-answer.md) | A/B scoring, unsupported claims, failure tags, and [when to accept neither answer](projects/ai-evaluation/cases/02-conflicting-versions.md). |
-| Spreadsheet / data QA | [Audit findings](projects/data-quality/audit-findings.md) | Duplicate IDs, missing values, shifted references, and totals that do not reconcile. |
-| Prompt refinement | [Prompt test case](projects/prompt-testing/README.md) | Explicit label rules, structured output, ambiguity handling, and regression fixtures. |
+| Runnable evaluator | [Rubric](examples/eval/rubric.json) | Weighted deterministic checks, evidence traces, failure clustering |
+| AI response evaluation | [Completed comparison](projects/ai-evaluation/cases/01-policy-answer.md) | A/B scoring, unsupported claims, failure tags, and [when to accept neither answer](projects/ai-evaluation/cases/02-conflicting-versions.md) |
+| Spreadsheet / data QA | [Audit findings](projects/data-quality/audit-findings.md) | Duplicate IDs, missing values, shifted references, and totals that do not reconcile |
+| Prompt refinement | [Prompt test case](projects/prompt-testing/README.md) | Explicit label rules, structured output, ambiguity handling, and regression fixtures |
 
-All data, policies, prompts, and candidate responses are synthetic. Candidate responses are constructed examples, not outputs attributed to real models. This is a small demonstration lab, not a model benchmark. See [provenance](docs/provenance.md).
+All data, policies, prompts, and candidate responses are synthetic unless a future dataset explicitly states otherwise. Candidate responses are constructed examples, not outputs attributed to real models. See [provenance](docs/provenance.md).
 
-## Run locally
+## Run the full test suite
 
-Requires Python 3.10+; no dependencies, API keys, or network calls.
+Requires Python 3.10+.
 
 ```bash
-python3 scripts/audit_data.py
-python3 scripts/audit_data.py --check
-python3 -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
+python scripts/audit_data.py --check
 ```
 
-Run from the repository root. The audit prints a JSON report; `--check` verifies it against the saved sample. The fixture intentionally contains defects: a successful check means those expected findings reproduce, not that the data is clean.
-
-The tests cover blank versus zero, duplicates, arithmetic and formula-reference defects, invalid numeric values, and prompt-output contracts. They do not call a model or execute a spreadsheet engine.
+GitHub Actions runs the package, legacy audit, tests, and CLI smoke test on Python 3.10, 3.11, and 3.12.
 
 ## Layout
 
 ```text
+ai_quality/          Reusable evaluation engine and CLI
+examples/eval/       Runnable rubric and response fixtures
 projects/
-  ai-evaluation/    Rubric, source passages, A/B evaluations
-  data-quality/     CSV, formula snapshot, findings, sample report
-  prompt-testing/   Prompt versions, contract, regression cases
-scripts/           Small standard-library audit script
-tests/             Data checks and prompt-fixture validation
-docs/              Scope, reproduction notes, and publishing
+  ai-evaluation/     Rubric, source passages, A/B evaluations
+  data-quality/      CSV, formula snapshot, findings, sample report
+  prompt-testing/    Prompt versions, contract, regression cases
+scripts/             Operational data audit
+ tests/              Evaluation, data, and prompt regression tests
+ docs/               Scope, reproduction notes, provenance, publishing
 ```
 
-For the complete file map and naming conventions, see the [repository guide](docs/repository-guide.md).
+## Design principles
 
-## Review approach
+Define the acceptance rule before scoring. Preserve source records. Separate an observed defect from its possible cause. Keep unknown values distinct from valid zeroes. Every automated decision should expose enough evidence for a human to challenge it.
 
-Define the acceptance rule before scoring. Preserve source records. Separate an observed defect from its possible cause, and keep unknown values distinct from valid zeroes. Each review should leave enough evidence and a next action for someone else to continue asynchronously.
+The deterministic evaluator is deliberately narrow. Keyword presence alone cannot establish truth, semantic equivalence, or instruction compliance in general. That boundary is part of the design, not hidden behind a confidence score.
 
-The spreadsheet example is supplied as CSV and formula text. The Python script checks a deliberately narrow contract; it is not a general workbook auditor. The prompt examples illustrate expected behavior; they do not establish live model reliability.
+## Roadmap
 
-## Contributing and open work
+The next competitive layers are:
 
-Useful contributions include a counterexample, a clearer rubric anchor, or a test exposing a false positive. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the concrete items in [TODO.md](TODO.md). Keep examples synthetic and include a reproducible expected result.
+1. versioned rubric schemas and validation
+2. pairwise model-output comparison
+3. baseline-vs-candidate regression reports
+4. evaluator disagreement and uncertainty representation
+5. pluggable deterministic and model-based judges
+6. HTML/JSON audit reports with stable evidence IDs
+7. benchmark datasets with explicit provenance and contamination notes
+
+Contributions should make a judgment more reproducible, falsifiable, or useful. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [TODO.md](TODO.md).
 
 ## Maintainer
 
