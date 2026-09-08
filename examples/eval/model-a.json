@@ -1,0 +1,10 @@
+[
+  {
+    "id": "case-1",
+    "response": "I understand the issue. Please send the order number so we can review the next step."
+  },
+  {
+    "id": "case-2",
+    "response": "Sorry about the trouble. Please try signing in again and contact support if it continues."
+  }
+]
