@@ -20,24 +20,23 @@ def _normalise(value: str) -> str:
     return " ".join(value.lower().split())
 
 
-def _criterion_result(text: str, criterion: dict[str, Any]) -> dict[str, Any]:
+def _criterion_result(text: str, normalised_text: str, criterion: dict[str, Any]) -> dict[str, Any]:
     cid = criterion["id"]
     rule = criterion["rule"]
     weight = float(criterion.get("weight", 1.0))
     source = criterion.get("source")
-    normalised = _normalise(text)
     values = criterion.get("values", [])
     matched: list[str] = []
     passed = False
 
     if rule == "contains_any":
-        matched = [value for value in values if _normalise(value) in normalised]
+        matched = [value for value in values if _normalise(value) in normalised_text]
         passed = bool(matched)
     elif rule == "contains_all":
-        matched = [value for value in values if _normalise(value) in normalised]
+        matched = [value for value in values if _normalise(value) in normalised_text]
         passed = len(matched) == len(values)
     elif rule == "excludes_any":
-        matched = [value for value in values if _normalise(value) in normalised]
+        matched = [value for value in values if _normalise(value) in normalised_text]
         passed = not matched
     elif rule == "max_chars":
         limit = int(criterion["value"])
@@ -64,7 +63,8 @@ def _criterion_result(text: str, criterion: dict[str, Any]) -> dict[str, Any]:
 
 def evaluate_response(record: dict[str, Any], rubric: dict[str, Any]) -> dict[str, Any]:
     text = str(record.get("response", ""))
-    results = [_criterion_result(text, item) for item in rubric["criteria"]]
+    normalised_text = _normalise(text)
+    results = [_criterion_result(text, normalised_text, item) for item in rubric["criteria"]]
     earned = sum(item["score"] for item in results)
     possible = sum(item["weight"] for item in results)
     percent = round((earned / possible * 100.0) if possible else 0.0, 2)
