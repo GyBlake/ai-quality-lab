@@ -24,4 +24,4 @@ jobs:
         pip install -e .
     - name: Run tests
       run: |
-        python -m unittest discover -s tests -p "test_*.py" || echo "Standard unittest discovery completed."
+        python -m unittest discover -s tests -p "test_*.py"
