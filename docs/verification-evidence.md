@@ -21,7 +21,7 @@ Requires Python 3.10 or newer.
 python -m pip install -e .
 python -m unittest discover -s tests -p "test_*.py" -v
 python scripts/audit_data.py --check
-python -m ai_quality.cli --help
+aq --help
 ```
 
 If the installed package exposes a different CLI entry point in a future version, follow the current package metadata and README. Do not interpret the synthetic data audit's expected defect findings as a claim that the intentionally broken fixture is clean.
