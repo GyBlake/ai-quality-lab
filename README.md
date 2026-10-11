@@ -1,3 +1,5 @@
+[![AI Quality Lab CI](https://github.com/GyBlake/ai-quality-lab/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/GyBlake/ai-quality-lab/actions/workflows/ci.yml)
+
 # ai-quality-lab
 
 Evidence-trace evaluation and data-quality utilities for AI systems.
